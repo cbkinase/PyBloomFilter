@@ -3,8 +3,10 @@ bitarray==2.9.2
 coverage==7.4.4
 exceptiongroup==1.2.0 ; python_version < '3.11'
 iniconfig==2.0.0 ; python_version >= '3.7'
+mmh3==4.1.0
 packaging==24.0 ; python_version >= '3.7'
 pluggy==1.4.0 ; python_version >= '3.8'
 pytest==8.1.1
 pytest-cov==5.0.0
 tomli==2.0.1 ; python_version < '3.11'
+xxhash==3.4.1
