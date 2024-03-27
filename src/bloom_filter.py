@@ -40,7 +40,6 @@ k = round((m / n) * log(2))
 
 
 import pickle
-import xxhash
 from functools import partial
 from math import ceil
 from math import exp
@@ -49,13 +48,11 @@ from math import pow
 from numbers import Number
 from typing import Hashable
 from bitarray import bitarray
+from xxhash import xxh3_64_intdigest
 
 
 class BloomFilter:
-    _hash_fn_pool = [
-        hash,
-        *[partial(xxhash.xxh64_intdigest, seed=i) for i in range(30)],
-    ]
+    _hash_fn_pool = [partial(xxh3_64_intdigest, seed=i) for i in range(30)]
 
     def __init__(self, expected_insertions: int, fp_rate: float = 0.03):
         if not isinstance(expected_insertions, int):
