@@ -38,13 +38,10 @@ k = round((m / n) * log(2))
     - P(false positive) = 0.393 ** 5 = 0.00937
 """
 
-
-import pickle
 from functools import partial
 from math import ceil
 from math import exp
 from math import log
-from math import pow
 from numbers import Number
 from typing import Hashable
 from bitarray import bitarray
@@ -78,7 +75,7 @@ class BloomFilter:
     def _make_bit_array(self):
         n = self._expected_insertions
         p = self._fp_rate
-        length = ceil((n * log(p)) / log(1 / pow(2, log(2))))
+        length = ceil(-n * log(p) / log(2) ** 2)
         return bitarray(length)
 
     def _pick_hash_functions(self):
@@ -128,11 +125,10 @@ class BloomFilter:
         Returns True if the item might have been put in this BloomFilter,
         False if this is definitely not the case.
         """
-        pickled = pickle.dumps(item)
+        byte_signature = hash(item).to_bytes(64, byteorder='big', signed=True)
 
         for hasher in self._hash_functions:
-            hash_int = hasher(pickled)
-            bucket = hash_int % len(self._bit_array)
+            bucket = hasher(byte_signature) % len(self._bit_array)
 
             if self._bit_array[bucket] == 0:
                 return False
@@ -143,11 +139,10 @@ class BloomFilter:
         """
         Put an element into the BloomFilter.
         """
-        pickled = pickle.dumps(item)
+        byte_signature = hash(item).to_bytes(64, byteorder='big', signed=True)
 
         for hasher in self._hash_functions:
-            hash_int = hasher(pickled)
-            bucket = hash_int % len(self._bit_array)
+            bucket = hasher(byte_signature) % len(self._bit_array)
             self._bit_array[bucket] = 1
 
     def put_all(self, other: "BloomFilter") -> None:
