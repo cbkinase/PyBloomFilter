@@ -125,10 +125,10 @@ class BloomFilter:
         Returns True if the item might have been put in this BloomFilter,
         False if this is definitely not the case.
         """
-        byte_signature = hash(item).to_bytes(64, byteorder='big', signed=True)
+        signature = hash(item).to_bytes(64, byteorder="big", signed=True)
 
         for hasher in self._hash_functions:
-            bucket = hasher(byte_signature) % len(self._bit_array)
+            bucket = hasher(signature) % len(self._bit_array)
 
             if self._bit_array[bucket] == 0:
                 return False
@@ -139,10 +139,10 @@ class BloomFilter:
         """
         Put an element into the BloomFilter.
         """
-        byte_signature = hash(item).to_bytes(64, byteorder='big', signed=True)
+        signature = hash(item).to_bytes(64, byteorder="big", signed=True)
 
         for hasher in self._hash_functions:
-            bucket = hasher(byte_signature) % len(self._bit_array)
+            bucket = hasher(signature) % len(self._bit_array)
             self._bit_array[bucket] = 1
 
     def put_all(self, other: "BloomFilter") -> None:
@@ -160,3 +160,41 @@ class BloomFilter:
         Included for uniformity with other container types.
         """
         return self.may_contain(item)
+
+    def __sizeof__(self):
+        return self._bit_array.__sizeof__()
+
+
+if __name__ == "__main__":
+    from uuid import uuid4
+    from time import perf_counter
+
+    size = 200_000
+    uuids = [uuid4() for _ in range(size)]
+    start = perf_counter()
+
+    b = BloomFilter(size, fp_rate=0.01)
+
+    for uuid in uuids:
+        b.put(uuid)
+
+    end = perf_counter()
+
+    print(round(end - start, 3), "seconds to add", size, "uuids")
+    bf_time = end - start
+
+    start = perf_counter()
+
+    s = set()
+    for uuid in uuids:
+        s.add(uuid)
+
+    end = perf_counter()
+    s_time = end - start
+
+    print(round(bf_time / s_time, 3), "times slower than set")
+    ssize = s.__sizeof__() / 1000 / 1000
+    bsize = b.__sizeof__() / 1000 / 1000
+    print(ssize, "MB used by set")
+    print(bsize, "MB used by Bloom filter")
+    print(round(ssize / bsize, 3), "times more space efficient")
